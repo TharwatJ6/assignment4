@@ -1,67 +1,101 @@
-﻿namespace assignment4
+﻿using System.Reflection.Emit;
+using System.Text;
+using System.Transactions;
+
+namespace assignment4
 {
     internal class Program
     {
-        public struct point
+        static double CalculateAverage(List<double> grades)
         {
-            public double x{get; set;}
-            public double y{get; set;}
-            
-            public point(double x, double y)
+            double sum = 0;
+            foreach (double grade in grades)
             {
-                this.x = x;
-                this.y = y;
+                sum += grade;
+            }
+            return sum / grades.Count;
+        }
+        static GradeLevel DetermineGradeLevel(double average)
+        {
+            if(average>=0 && average <= 20)
+            {
+                return GradeLevel.Freshman;
+            }
+            else if(average > 20 && average <= 40)
+            {
+                return GradeLevel.Sophomore;
+            }
+            else if(average > 40 && average <= 60)
+            {
+                return GradeLevel.Junior;
+            }
+            else
+            {
+                return GradeLevel.Senior;
             }
         }
-
-        static double distance(point p1, point p2)
+        enum GradeLevel
         {
-            double dx = p2.x - p1.x;
-            double dy = p2.y - p1.y;
-            double dist = Math.Sqrt(dx * dx + dy * dy);
-            return dist;
+            Freshman,
+            Sophomore,
+            Junior,
+            Senior
         }
         static void Main(string[] args)
         {
-            point p1, p2;
-            double x, y;
-            Console.WriteLine("Enter coordinates for point 1 (x y):");
-
-            Console.Write("x : ");
-
-            while (!double.TryParse(Console.ReadLine(),out x))
+            Dictionary<string, List<double>> students = new Dictionary<string, List<double>>();
+            Dictionary<string, string> levels = new Dictionary<string, string>();
+            double grade;
+            int numStudents;
+            Console.Write("Enter the number of students:  ");
+            while (!int.TryParse(Console.ReadLine(), out numStudents) || numStudents <= 0)
             {
-                 Console.WriteLine("Invalid input try again");
-                Console.Write("x : ");
+                Console.WriteLine("Invalid input. Please enter a positive integer for the number of students:");
+                Console.Write("Enter the number of students:  ");
             }
-
-            Console.Write("y : ");
-
-            while (!double.TryParse(Console.ReadLine(), out y))
+            for (int i = 0; i < numStudents; i++)
             {
-                Console.WriteLine("Invalid input try again");
-                Console.Write("y : ");
+                Console.Write($"Enter the name of student {i + 1}: ");
+                string name = Console.ReadLine();
+                while (string.IsNullOrWhiteSpace(name))
+                {
+                    Console.WriteLine("Name cannot be empty. Please enter a valid name.");
+                    Console.Write($"Enter the name of student {i + 1}: ");
+                    name = Console.ReadLine();
+                }
+                Console.WriteLine("Enter his grades: ");
+                for (int j = 0; j < 4; j++)
+                {
+                    Console.Write($"Grade {j + 1}: ");
+                    while (!double.TryParse(Console.ReadLine(), out grade) || grade < 0 || grade > 100)
+                    {
+                        Console.WriteLine("Invalid input. Please enter a number between 0 and 100 for the grade.");
+                        Console.Write($"Grade {j + 1}: ");
+                    }
+                    if (!students.ContainsKey(name))
+                    {
+                        students[name] = new List<double>();
+                    }
+                    students[name].Add(grade);
+                }
             }
-            p1 = new point(x, y);
-
-            Console.WriteLine("Enter coordinates for point 2 (x y):");
-
-            Console.Write("x : ");
-            while (!double.TryParse(Console.ReadLine(), out x))
+            foreach (var student in students)
             {
-                Console.WriteLine("Invalid input try again");
-                Console.Write("x : ");
+                double average = CalculateAverage(student.Value);
+                GradeLevel level = DetermineGradeLevel(average);
+                levels[student.Key] = level.ToString();
             }
-
-            Console.Write("y : ");
-            while (!double.TryParse(Console.ReadLine(), out y))
+            Console.WriteLine("\nStudent Grades and Levels:");
+            foreach (var student in students)
             {
-                Console.WriteLine("Invalid input try again");
-                Console.Write("y : ");
+                foreach (var level in levels)
+                {
+                    if (level.Key == student.Key)
+                    {
+                        Console.WriteLine($"Student: {student.Key}, Grades: {string.Join(", ", student.Value)}, Average: {CalculateAverage(student.Value)}, Grade Level: {level.Value} ");
+                    }
+                }
             }
-            p2 = new point(x, y);
-
-            Console.WriteLine($"Distance between p1 and p2: {distance(p1, p2)}");
         }
     }
 }
